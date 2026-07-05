@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: banko-automation-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: banko
+      POSTGRES_PASSWORD: banko_password
+      POSTGRES_DB: banko_automation
+    ports:
+      - "5432:5432"
+    volumes:
+      - banko_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  banko_postgres_data:
