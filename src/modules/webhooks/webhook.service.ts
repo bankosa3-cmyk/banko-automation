@@ -1,4 +1,5 @@
 import { createCouponForRewardIfNeeded } from "../coupons/coupon.service.js";
+import { queueCouponNotification } from "../notifications/notification.service.js";
 import { handleCompletedOrder } from "../orders/order.service.js";
 import { parseZidOrderCompletedWebhook } from "../orders/order-webhook.parser.js";
 import { createFirstOrderRewardIfNeeded } from "../rewards/reward.service.js";
@@ -63,6 +64,15 @@ export const processZidWebhook = async (payload: ZidWebhookPayload) => {
     amount: Number(rewardResult.reward.amount),
     minimumOrderAmount: Number(rewardResult.reward.minimumOrderAmount),
     expiresAt: rewardResult.reward.expiresAt,
+  });
+
+  await queueCouponNotification({
+    customerId: completedOrderResult.customer.id,
+    rewardId: rewardResult.reward.id,
+    couponCode: couponResult.coupon.code,
+    amount: Number(couponResult.coupon.amount),
+    minimumOrderAmount: Number(couponResult.coupon.minimumOrderAmount),
+    expiresAt: couponResult.coupon.expiresAt,
   });
 
   logger.info("Coupon prepared for first order reward", {
