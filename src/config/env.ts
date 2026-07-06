@@ -16,12 +16,17 @@ const envSchema = z.object({
     .default("info"),
 
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+
+  ZID_WEBHOOK_SECRET: z.string().optional(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
 
 if (!parsedEnv.success) {
-  console.error("Invalid environment variables", parsedEnv.error.flatten().fieldErrors);
+  console.error(
+    "Invalid environment variables",
+    parsedEnv.error.flatten().fieldErrors,
+  );
   process.exit(1);
 }
 
