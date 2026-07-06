@@ -1,3 +1,4 @@
+import { handleCompletedOrder } from "../orders/order.service.js";
 import { parseZidOrderCompletedWebhook } from "../orders/order-webhook.parser.js";
 import { logger } from "../../shared/logger/logger.js";
 import { webhookRepository } from "./webhook.repository.js";
@@ -30,19 +31,23 @@ export const processZidWebhook = async (payload: ZidWebhookPayload) => {
     };
   }
 
-  const order = parseZidOrderCompletedWebhook(payload.data);
+  const parsedOrder = parseZidOrderCompletedWebhook(payload.data);
+  const completedOrderResult = await handleCompletedOrder(parsedOrder);
 
-  logger.info("Parsed Zid completed order webhook", {
+  logger.info("Completed order handled", {
     webhookEventId: webhookEvent.id,
-    zidOrderId: order.zidOrderId,
-    zidCustomerId: order.customer.zidCustomerId,
-    totalAmount: order.totalAmount,
+    zidOrderId: completedOrderResult.order.zidOrderId,
+    zidCustomerId: completedOrderResult.customer.zidCustomerId,
+    isFirstCompletedOrder: completedOrderResult.isFirstCompletedOrder,
+    completedOrdersCount: completedOrderResult.completedOrdersCount,
   });
 
   await webhookRepository.markProcessed(webhookEvent.id);
 
   return {
     processed: true,
-    reason: "order_completed_received",
+    reason: completedOrderResult.isFirstCompletedOrder
+      ? "first_completed_order"
+      : "not_first_completed_order",
   };
 };
