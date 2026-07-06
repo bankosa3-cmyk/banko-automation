@@ -1,6 +1,8 @@
+import axios from "axios";
 import { Router } from "express";
-import { apiKeyMiddleware } from "../../shared/middleware/api-key.middleware.js";
 import { env } from "../../config/env.js";
+import { apiKeyMiddleware } from "../../shared/middleware/api-key.middleware.js";
+import { logger } from "../../shared/logger/logger.js";
 import { zidCustomerClient } from "../zid/zid-customer.client.js";
 
 export const internalRoutes = Router();
@@ -29,6 +31,20 @@ internalRoutes.post("/test-zid-customer-tag", async (req, res, next) => {
       tagName,
     });
   } catch (error) {
-    next(error);
+    if (axios.isAxiosError(error)) {
+      logger.error("Zid customer tag test failed", {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+
+      return res.status(502).json({
+        message: "Zid API request failed",
+        zidStatus: error.response?.status,
+        zidResponse: error.response?.data,
+      });
+    }
+
+    return next(error);
   }
 });
