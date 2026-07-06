@@ -9,7 +9,9 @@
   "start": "node dist/app/server.js",
   "typecheck": "tsc --noEmit",
   "test": "vitest run",
-  "test:watch": "vitest"
+  "test:watch": "vitest",
+  "prisma:migrate:deploy": "prisma migrate deploy",
+  "prisma:generate": "prisma generate"
 },
   "keywords": [],
   "author": "",
