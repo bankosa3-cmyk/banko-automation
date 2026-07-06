@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/app/server.ts",
     "build": "tsc",
-    "start": "node dist/app/server.js",
+    "start": "npx prisma migrate deploy && node dist/app/server.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -32,7 +32,6 @@
     "@prisma/client": "^7.8.0",
     "axios": "^1.18.1",
     "express": "^5.2.1",
-    "form-data": "^4.0.6",
     "pg": "^8.22.0",
     "prisma": "^7.8.0",
     "winston": "^3.19.0",
