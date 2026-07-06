@@ -24,6 +24,7 @@ const envSchema = z.object({
   ZID_API_BASE_URL: z.string().url().default("https://api.zid.sa"),
   ZID_ACCESS_TOKEN: z.string().optional(),
   ZID_MANAGER_TOKEN: z.string().optional(),
+ZID_STORE_ID: z.string().optional(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
