@@ -51,7 +51,9 @@ export const zidHttpClient = axios.create({
 zidHttpClient.interceptors.request.use(async (config) => {
   const credentials = await getZidCredentials();
 
-  config.headers.Authorization = credentials.authorization;
+config.headers.Authorization = credentials.authorization.startsWith("Bearer ")
+  ? credentials.authorization
+  : `Bearer ${credentials.authorization}`;
   config.headers["X-Manager-Token"] = credentials.managerToken;
   config.headers["Accept-Language"] = "ar";
 
