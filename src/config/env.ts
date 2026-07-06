@@ -25,6 +25,9 @@ const envSchema = z.object({
   ZID_ACCESS_TOKEN: z.string().optional(),
   ZID_MANAGER_TOKEN: z.string().optional(),
 ZID_STORE_ID: z.string().optional(),
+ZID_FIRST_ORDER_REWARD_TAG: z
+  .string()
+  .default("first_order_reward_eligible"),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
