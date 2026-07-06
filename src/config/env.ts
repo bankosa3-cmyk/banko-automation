@@ -18,6 +18,12 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
 
   ZID_WEBHOOK_SECRET: z.string().optional(),
+
+  INTERNAL_API_KEY: z.string().optional(),
+
+  ZID_API_BASE_URL: z.string().url().default("https://api.zid.sa"),
+  ZID_ACCESS_TOKEN: z.string().optional(),
+  ZID_MANAGER_TOKEN: z.string().optional(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
@@ -27,7 +33,4 @@ if (!parsedEnv.success) {
     "Invalid environment variables",
     parsedEnv.error.flatten().fieldErrors,
   );
-  process.exit(1);
-}
-
-export const env = parsedEnv.data;
+  process.exit
