@@ -1,5 +1,6 @@
 import express from "express";
 import { webhookRoutes } from "../modules/webhooks/webhook.routes.js";
+import { errorMiddleware } from "../shared/middleware/error.middleware.js";
 import { notFoundMiddleware } from "../shared/middleware/not-found.middleware.js";
 import { requestLoggerMiddleware } from "../shared/middleware/request-logger.middleware.js";
 
@@ -19,6 +20,7 @@ export const createExpressApp = () => {
   app.use("/webhooks", webhookRoutes);
 
   app.use(notFoundMiddleware);
+  app.use(errorMiddleware);
 
   return app;
 };

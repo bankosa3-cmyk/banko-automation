@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
-import type { Request, Response, NextFunction } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { env } from "../../config/env.js";
+import { AppError } from "../../shared/errors/AppError.js";
 import { logger } from "../../shared/logger/logger.js";
 
 const getWebhookSignature = (req: Request) => {
@@ -9,7 +10,7 @@ const getWebhookSignature = (req: Request) => {
 
 export const verifyZidWebhookSignature = (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ) => {
   if (!env.ZID_WEBHOOK_SECRET) {
@@ -20,9 +21,7 @@ export const verifyZidWebhookSignature = (
   const signature = getWebhookSignature(req);
 
   if (!signature) {
-    return res.status(401).json({
-      message: "Missing webhook signature",
-    });
+    return next(new AppError("Missing webhook signature", 401));
   }
 
   const payload = JSON.stringify(req.body);
@@ -32,21 +31,17 @@ export const verifyZidWebhookSignature = (
     .update(payload)
     .digest("hex");
 
-const signatureBuffer = Buffer.from(signature);
-const expectedSignatureBuffer = Buffer.from(expectedSignature);
+  const signatureBuffer = Buffer.from(signature);
+  const expectedSignatureBuffer = Buffer.from(expectedSignature);
 
-if (signatureBuffer.length !== expectedSignatureBuffer.length) {
-  return res.status(401).json({
-    message: "Invalid webhook signature",
-  });
-}
+  if (signatureBuffer.length !== expectedSignatureBuffer.length) {
+    return next(new AppError("Invalid webhook signature", 401));
+  }
 
-const isValid = crypto.timingSafeEqual(signatureBuffer, expectedSignatureBuffer);
+  const isValid = crypto.timingSafeEqual(signatureBuffer, expectedSignatureBuffer);
 
   if (!isValid) {
-    return res.status(401).json({
-      message: "Invalid webhook signature",
-    });
+    return next(new AppError("Invalid webhook signature", 401));
   }
 
   return next();
