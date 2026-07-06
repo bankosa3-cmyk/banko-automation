@@ -1,20 +1,43 @@
 import axios from "axios";
 import { env } from "../../config/env.js";
 import { AppError } from "../../shared/errors/AppError.js";
+import { prisma } from "../../shared/database/prisma.js";
 
-const getZidCredentials = () => {
-  if (!env.ZID_ACCESS_TOKEN || !env.ZID_MANAGER_TOKEN) {
-    throw new AppError("Zid API credentials are not configured", 500);
+const getZidCredentials = async () => {
+  const storeId = env.ZID_STORE_ID;
+
+  if (!storeId) {
+    throw new AppError("Zid store id is not configured", 500);
+  }
+
+  const token = await prisma.zidStoreToken.findUnique({
+    where: {
+      storeId,
+    },
+  });
+
+  if (!token) {
+    throw new AppError("Zid OAuth tokens are not configured", 500);
   }
 
   return {
-    authorization: env.ZID_ACCESS_TOKEN,
-    managerToken: env.ZID_MANAGER_TOKEN,
+    authorization: token.authorizationToken,
+    managerToken: token.managerToken,
   };
 };
 
-export const isZidConfigured = () => {
-  return Boolean(env.ZID_ACCESS_TOKEN && env.ZID_MANAGER_TOKEN);
+export const isZidConfigured = async () => {
+  if (!env.ZID_STORE_ID) {
+    return false;
+  }
+
+  const token = await prisma.zidStoreToken.findUnique({
+    where: {
+      storeId: env.ZID_STORE_ID,
+    },
+  });
+
+  return Boolean(token);
 };
 
 export const zidHttpClient = axios.create({
@@ -25,8 +48,8 @@ export const zidHttpClient = axios.create({
   },
 });
 
-zidHttpClient.interceptors.request.use((config) => {
-  const credentials = getZidCredentials();
+zidHttpClient.interceptors.request.use(async (config) => {
+  const credentials = await getZidCredentials();
 
   config.headers.Authorization = credentials.authorization;
   config.headers["X-Manager-Token"] = credentials.managerToken;
