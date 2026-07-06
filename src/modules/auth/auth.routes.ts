@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { env } from "../../config/env.js";
 import { logger } from "../../shared/logger/logger.js";
+import { zidOAuthService } from "../zid/zid-oauth.service.js";
 
 export const authRoutes = Router();
 
@@ -26,24 +27,47 @@ authRoutes.get("/zid/start", (_req, res) => {
   return res.redirect(authorizationUrl);
 });
 
-authRoutes.get("/zid/callback", (req, res) => {
-  const { code, state, store_id, authorization_code } = req.query;
+authRoutes.get("/zid/callback", async (req, res, next) => {
+  try {
+    const { code, state, store_id, authorization_code } = req.query;
 
-  logger.info("Zid OAuth callback received", {
-    hasCode: typeof code === "string",
-    hasAuthorizationCode: typeof authorization_code === "string",
-    state: typeof state === "string" ? state : undefined,
-    storeId: typeof store_id === "string" ? store_id : undefined,
-    query: req.query,
-  });
+    logger.info("Zid OAuth callback received", {
+      hasCode: typeof code === "string",
+      hasAuthorizationCode: typeof authorization_code === "string",
+      state: typeof state === "string" ? state : undefined,
+      storeId: typeof store_id === "string" ? store_id : undefined,
+      query: req.query,
+    });
 
-  return res.status(200).send(`
-    <html>
-      <body style="font-family: Arial; padding: 40px;">
-        <h1>Banko Automation</h1>
-        <p>Zid authorization callback received successfully.</p>
-        <p>You can close this page and return to the setup.</p>
-      </body>
-    </html>
-  `);
+    const grantCode =
+      typeof code === "string"
+        ? code
+        : typeof authorization_code === "string"
+          ? authorization_code
+          : undefined;
+
+    if (!grantCode) {
+      return res.status(400).send("Missing Zid authorization code.");
+    }
+
+    const storeId = typeof store_id === "string" ? store_id : undefined;
+
+    const token = await zidOAuthService.exchangeCodeForTokens({
+      code: grantCode,
+      ...(storeId ? { storeId } : {}),
+    });
+
+    return res.status(200).send(`
+      <html>
+        <body style="font-family: Arial; padding: 40px;">
+          <h1>Banko Automation</h1>
+          <p>Zid authorization completed successfully.</p>
+          <p>Store token saved for store: ${token.storeId}</p>
+          <p>You can close this page and return to the setup.</p>
+        </body>
+      </html>
+    `);
+  } catch (error) {
+    next(error);
+  }
 });
