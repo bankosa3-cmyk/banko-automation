@@ -1,8 +1,9 @@
 import type { Request, Response } from "express";
 import { logger } from "../../shared/logger/logger.js";
+import { processZidWebhook } from "./webhook.service.js";
 import { zidWebhookSchema } from "./webhook.validation.js";
 
-export const handleZidWebhook = (req: Request, res: Response) => {
+export const handleZidWebhook = async (req: Request, res: Response) => {
   const result = zidWebhookSchema.safeParse(req.body);
 
   if (!result.success) {
@@ -15,11 +16,11 @@ export const handleZidWebhook = (req: Request, res: Response) => {
     });
   }
 
-  logger.info("Zid webhook received", {
-    event: result.data.event,
-  });
+  const processingResult = await processZidWebhook(result.data);
 
   return res.status(200).json({
     received: true,
+    processed: processingResult.processed,
+    reason: processingResult.reason,
   });
 };
