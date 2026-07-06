@@ -1,3 +1,4 @@
+import { parseZidOrderCompletedWebhook } from "../orders/order-webhook.parser.js";
 import { logger } from "../../shared/logger/logger.js";
 import { webhookRepository } from "./webhook.repository.js";
 import type { ZidWebhookPayload } from "./webhook.validation.js";
@@ -28,6 +29,15 @@ export const processZidWebhook = async (payload: ZidWebhookPayload) => {
       reason: "unsupported_event",
     };
   }
+
+  const order = parseZidOrderCompletedWebhook(payload.data);
+
+  logger.info("Parsed Zid completed order webhook", {
+    webhookEventId: webhookEvent.id,
+    zidOrderId: order.zidOrderId,
+    zidCustomerId: order.customer.zidCustomerId,
+    totalAmount: order.totalAmount,
+  });
 
   await webhookRepository.markProcessed(webhookEvent.id);
 

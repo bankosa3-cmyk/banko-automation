@@ -33,4 +33,7 @@ if (!parsedEnv.success) {
     "Invalid environment variables",
     parsedEnv.error.flatten().fieldErrors,
   );
-  process.exit
+  process.exit(1);
+}
+
+export const env = parsedEnv.data;
