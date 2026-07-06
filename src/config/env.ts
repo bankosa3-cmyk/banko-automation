@@ -28,6 +28,9 @@ ZID_STORE_ID: z.string().optional(),
 ZID_FIRST_ORDER_REWARD_TAG: z
   .string()
   .default("first_order_reward_eligible"),
+  ZID_OAUTH_CLIENT_ID: z.string().optional(),
+  ZID_OAUTH_CLIENT_SECRET: z.string().optional(),
+  ZID_OAUTH_REDIRECT_URI: z.string().url().optional(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

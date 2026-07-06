@@ -1,15 +1,29 @@
 import { Router } from "express";
+import { env } from "../../config/env.js";
 import { logger } from "../../shared/logger/logger.js";
 
 export const authRoutes = Router();
+
+authRoutes.get("/zid/start", (_req, res) => {
+  if (!env.ZID_OAUTH_CLIENT_ID || !env.ZID_OAUTH_REDIRECT_URI) {
+    return res.status(500).send("Zid OAuth is not configured.");
+  }
+
+  const queries = new URLSearchParams({
+    client_id: env.ZID_OAUTH_CLIENT_ID,
+    redirect_uri: env.ZID_OAUTH_REDIRECT_URI,
+    response_type: "code",
+  });
+
+  return res.redirect(`https://oauth.zid.sa/oauth/authorize?${queries}`);
+});
 
 authRoutes.get("/zid/callback", (req, res) => {
   const { code, state, store_id, authorization_code } = req.query;
 
   logger.info("Zid OAuth callback received", {
-    code: typeof code === "string" ? code : undefined,
-    authorizationCode:
-      typeof authorization_code === "string" ? authorization_code : undefined,
+    hasCode: typeof code === "string",
+    hasAuthorizationCode: typeof authorization_code === "string",
     state: typeof state === "string" ? state : undefined,
     storeId: typeof store_id === "string" ? store_id : undefined,
     query: req.query,
