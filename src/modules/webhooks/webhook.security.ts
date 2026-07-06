@@ -32,10 +32,16 @@ export const verifyZidWebhookSignature = (
     .update(payload)
     .digest("hex");
 
-  const isValid = crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expectedSignature),
-  );
+const signatureBuffer = Buffer.from(signature);
+const expectedSignatureBuffer = Buffer.from(expectedSignature);
+
+if (signatureBuffer.length !== expectedSignatureBuffer.length) {
+  return res.status(401).json({
+    message: "Invalid webhook signature",
+  });
+}
+
+const isValid = crypto.timingSafeEqual(signatureBuffer, expectedSignatureBuffer);
 
   if (!isValid) {
     return res.status(401).json({
