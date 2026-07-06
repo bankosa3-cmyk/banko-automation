@@ -8,6 +8,26 @@ import { webhookRepository } from "./webhook.repository.js";
 import type { ZidWebhookPayload } from "./webhook.validation.js";
 
 export const processZidWebhook = async (payload: ZidWebhookPayload) => {
+  if (payload.event_id) {
+    const existingWebhookEvent = await webhookRepository.findByExternalEventId(
+      payload.event_id,
+    );
+
+    if (existingWebhookEvent) {
+      logger.info("Duplicate Zid webhook ignored", {
+        event: payload.event,
+        externalEventId: payload.event_id,
+        webhookEventId: existingWebhookEvent.id,
+        status: existingWebhookEvent.status,
+      });
+
+      return {
+        processed: false,
+        reason: "duplicate_webhook_event",
+      };
+    }
+  }
+
   const webhookEvent = await webhookRepository.createReceivedEvent({
     provider: "zid",
     eventType: payload.event,

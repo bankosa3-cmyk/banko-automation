@@ -9,12 +9,20 @@ type CreateWebhookEventInput = {
 };
 
 export const webhookRepository = {
+  findByExternalEventId: async (externalEventId: string) => {
+    return prisma.webhookEvent.findUnique({
+      where: {
+        externalEventId,
+      },
+    });
+  },
+
   createReceivedEvent: async (input: CreateWebhookEventInput) => {
     return prisma.webhookEvent.create({
       data: {
         provider: input.provider,
         eventType: input.eventType,
-externalEventId: input.externalEventId ?? null,
+        externalEventId: input.externalEventId ?? null,
         payload: input.payload as Prisma.InputJsonValue,
         status: "received",
       },
