@@ -1,5 +1,6 @@
 import { handleCompletedOrder } from "../orders/order.service.js";
 import { parseZidOrderCompletedWebhook } from "../orders/order-webhook.parser.js";
+import { createFirstOrderRewardIfNeeded } from "../rewards/reward.service.js";
 import { logger } from "../../shared/logger/logger.js";
 import { webhookRepository } from "./webhook.repository.js";
 import type { ZidWebhookPayload } from "./webhook.validation.js";
@@ -42,12 +43,26 @@ export const processZidWebhook = async (payload: ZidWebhookPayload) => {
     completedOrdersCount: completedOrderResult.completedOrdersCount,
   });
 
+  if (!completedOrderResult.isFirstCompletedOrder) {
+    await webhookRepository.markProcessed(webhookEvent.id);
+
+    return {
+      processed: true,
+      reason: "not_first_completed_order",
+    };
+  }
+
+  const rewardResult = await createFirstOrderRewardIfNeeded({
+    customerId: completedOrderResult.customer.id,
+    orderId: completedOrderResult.order.id,
+  });
+
   await webhookRepository.markProcessed(webhookEvent.id);
 
   return {
     processed: true,
-    reason: completedOrderResult.isFirstCompletedOrder
-      ? "first_completed_order"
-      : "not_first_completed_order",
+    reason: rewardResult.created
+      ? "first_order_reward_created"
+      : "first_order_reward_already_exists",
   };
 };
