@@ -15,7 +15,15 @@ authRoutes.get("/zid/start", (_req, res) => {
     response_type: "code",
   });
 
-  return res.redirect(`https://oauth.zid.sa/oauth/authorize?${queries}`);
+  const authorizationUrl = `https://oauth.zid.sa/oauth/authorize?${queries}`;
+
+  logger.info("Redirecting merchant to Zid OAuth", {
+    authorizationUrl,
+    clientId: env.ZID_OAUTH_CLIENT_ID,
+    redirectUri: env.ZID_OAUTH_REDIRECT_URI,
+  });
+
+  return res.redirect(authorizationUrl);
 });
 
 authRoutes.get("/zid/callback", (req, res) => {
