@@ -1,4 +1,5 @@
 import express from "express";
+import { webhookRoutes } from "../modules/webhooks/webhook.routes.js";
 
 export const createExpressApp = () => {
   const app = express();
@@ -11,6 +12,8 @@ export const createExpressApp = () => {
       service: "banko-automation",
     });
   });
+
+  app.use("/webhooks", webhookRoutes);
 
   return app;
 };
