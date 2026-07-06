@@ -1,35 +1,19 @@
-import "dotenv/config";
-import { z } from "zod";
+import type { RequestHandler } from "express";
+import { env } from "../../config/env.js";
+import { AppError } from "../errors/AppError.js";
 
-const envSchema = z.object({
-  NODE_ENV: z
-    .enum(["development", "test", "production"])
-    .default("development"),
+export const apiKeyMiddleware: RequestHandler = (req, _res, next) => {
+  if (!env.INTERNAL_API_KEY) {
+    return next(new AppError("Internal API key is not configured", 500));
+  }
 
-  PORT: z
-    .string()
-    .default("3000")
-    .transform((value) => Number(value)),
+  const apiKey = req.header("x-api-key");
 
-  LOG_LEVEL: z
-    .enum(["error", "warn", "info", "http", "verbose", "debug", "silly"])
-    .default("info"),
+  if (apiKey !== env.INTERNAL_API_KEY) {
+    return next(new AppError("Invalid API key", 401));
+  }
 
-  DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+  return next();
+};
 
-  ZID_WEBHOOK_SECRET: z.string().optional(),
-
-  INTERNAL_API_KEY: z.string().optional(),
-});
-
-const parsedEnv = envSchema.safeParse(process.env);
-
-if (!parsedEnv.success) {
-  console.error(
-    "Invalid environment variables",
-    parsedEnv.error.flatten().fieldErrors,
-  );
-  process.exit(1);
-}
-
-export const env = parsedEnv.data;
+export const requireApiKey = apiKeyMiddleware;

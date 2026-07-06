@@ -1,5 +1,6 @@
-import { authRoutes } from "../modules/auth/auth.routes.js";
 import express from "express";
+import { authRoutes } from "../modules/auth/auth.routes.js";
+import { internalRoutes } from "../modules/internal/internal.routes.js";
 import { webhookRoutes } from "../modules/webhooks/webhook.routes.js";
 import { errorMiddleware } from "../shared/middleware/error.middleware.js";
 import { notFoundMiddleware } from "../shared/middleware/not-found.middleware.js";
@@ -17,7 +18,9 @@ export const createExpressApp = () => {
       service: "banko-automation",
     });
   });
-app.use("/auth", authRoutes);
+
+  app.use("/auth", authRoutes);
+  app.use("/internal", internalRoutes);
   app.use("/webhooks", webhookRoutes);
 
   app.use(notFoundMiddleware);
