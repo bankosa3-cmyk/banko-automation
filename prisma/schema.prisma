@@ -131,3 +131,14 @@ model AutomationLog {
   metadata  Json?
   createdAt DateTime @default(now())
 }
+model ZidStoreToken {
+  id                 String   @id @default(uuid())
+  storeId            String   @unique
+  authorizationToken String   @db.Text
+  managerToken       String   @db.Text
+  refreshToken       String?  @db.Text
+  tokenType          String?
+  expiresAt          DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
