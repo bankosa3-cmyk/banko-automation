@@ -1,3 +1,4 @@
+import { createCouponForRewardIfNeeded } from "../coupons/coupon.service.js";
 import { handleCompletedOrder } from "../orders/order.service.js";
 import { parseZidOrderCompletedWebhook } from "../orders/order-webhook.parser.js";
 import { createFirstOrderRewardIfNeeded } from "../rewards/reward.service.js";
@@ -57,12 +58,26 @@ export const processZidWebhook = async (payload: ZidWebhookPayload) => {
     orderId: completedOrderResult.order.id,
   });
 
+  const couponResult = await createCouponForRewardIfNeeded({
+    rewardId: rewardResult.reward.id,
+    amount: Number(rewardResult.reward.amount),
+    minimumOrderAmount: Number(rewardResult.reward.minimumOrderAmount),
+    expiresAt: rewardResult.reward.expiresAt,
+  });
+
+  logger.info("Coupon prepared for first order reward", {
+    rewardId: rewardResult.reward.id,
+    couponId: couponResult.coupon.id,
+    couponCode: couponResult.coupon.code,
+    created: couponResult.created,
+  });
+
   await webhookRepository.markProcessed(webhookEvent.id);
 
   return {
     processed: true,
-    reason: rewardResult.created
-      ? "first_order_reward_created"
-      : "first_order_reward_already_exists",
+    reason: couponResult.created
+      ? "first_order_coupon_created"
+      : "first_order_coupon_already_exists",
   };
 };
