@@ -1,11 +1,12 @@
 import winston from "winston";
+import { env } from "../../config/env.js";
 
 const { combine, timestamp, errors, json, colorize, simple } = winston.format;
 
-const isProduction = process.env.NODE_ENV === "production";
+const isProduction = env.NODE_ENV === "production";
 
 export const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || "info",
+  level: env.LOG_LEVEL,
   format: combine(
     timestamp(),
     errors({ stack: true }),
